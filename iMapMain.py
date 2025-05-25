@@ -357,7 +357,7 @@ with col2:
                   display: inline-block;
                   width: 17px;
                   height: 17px;
-                  background-color: #3498db;
+                  background-color: #74ac72;
                   color: white;
                   border-radius: 50%;
                   text-align: center;
