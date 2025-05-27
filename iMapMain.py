@@ -137,7 +137,7 @@ def get_et0(lat, lon):
 
     # Step 2: average monthly sums across years
     avg_monthly_et0 = monthly_sums.groupby("month")["et0"].mean().reset_index()
-    avg_monthly_et0["et0"] = avg_monthly_et0["et0"] * 1.1
+    avg_monthly_et0["et0"] = avg_monthly_et0["et0"] * 1.15
 
     avg_monthly_et0.rename(columns={"et0": "ET0"}, inplace=True)
 
