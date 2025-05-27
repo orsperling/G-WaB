@@ -237,7 +237,7 @@ def save_map_as_image_static(lat, lon, zoom=15, size=(600, 450), marker_path='im
 
 
 # 🌟 **Streamlit UI**
-st.markdown("<h1 style='text-align: center;'>AALMOND - irrigation Monthly Annual Planner</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center;'>ALMOND - irrigation Monthly Annual Planner</h1>", unsafe_allow_html=True)
 st.markdown(
     "<p style='text-align: center; font-size: 20px'>This is a research report founded by <a href=\"https://www.bard-isus.org/\"> <strong>BARD</strong></a>. </p>",
     unsafe_allow_html=True)
@@ -256,6 +256,7 @@ unit_system = st.sidebar.radio("Select Units", ["Metric (mm)", "Imperial (inches
 
 unit_label = "inches" if "Imperial" in unit_system else "mm"
 conversion_factor = 0.03937 if "Imperial" in unit_system else 1
+round_digit = 1 if "Imperial" in unit_system else 0
 
 # Layout: 2 columns (map | output)
 col2, col1 = st.columns([6, 4])
@@ -425,6 +426,11 @@ with col2:
 
                 filtered_df['month'] = pd.to_datetime(filtered_df['month'], format='%m').dt.month_name()
                 filtered_df[['ET0', 'ETa', 'week_irrigation_volume']] = filtered_df[['ET0', 'ETa', 'irrigation']] / 4
+                filtered_df[['ET0', 'ETa', 'week_irrigation_volume']] = filtered_df[['ET0', 'ETa', 'week_irrigation_volume']].round(round_digit)
+
+
+                # round ET0 ETa and week_irrigation_volume to 1 decimal place
+                
 
                 st.dataframe(
                     filtered_df[['month', 'ET0', 'ETa', 'week_irrigation_volume', 'alert']]
