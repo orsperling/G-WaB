@@ -176,7 +176,7 @@ def calc_irrigation(ndvi, rain, et0, m_winter, irrigation_months, irrigation_fac
     NDVI = ndvi
     rain1 = rain * conversion_factor + m_winter
 
-    if NDVI < 0.67: NDVI *= 1.05
+    if NDVI < 0.65: NDVI *= 1.1
 
     mnts = list(range(irrigation_months[0], irrigation_months[1] + 1))
 
