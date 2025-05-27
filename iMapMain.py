@@ -483,8 +483,8 @@ with col2:
                     filtered_df = df_irrigation[df_irrigation['month'].between(start_month, end_month)]
 
                     filtered_df['month'] = pd.to_datetime(filtered_df['month'], format='%m').dt.month_name()
-                    filtered_df[['ET0', 'ETa', 'week_irrigation_volume']] = filtered_df[
-                                                                                ['ET0', 'ETa', 'irrigation']] / 4
+                    filtered_df[['ET0', 'ETa', 'week_irrigation_volume']] = filtered_df[['ET0', 'ETa', 'irrigation']] / 4
+                    filtered_df[['ET0', 'ETa', 'week_irrigation_volume']] = filtered_df[['ET0', 'ETa', 'week_irrigation_volume']].round(round_digit)
 
                     selected_columns_df = (
                         filtered_df[['month', 'ET0', 'ETa', 'week_irrigation_volume', 'alert']]
@@ -497,8 +497,6 @@ with col2:
                             'alert': 'Alert'
                         }))
                     
-                    # selected_columns_df[['ET0', 'ETa', 'week_irrigation_volume']] = selected_columns_df[['ET0', 'ETa', 'week_irrigation_volume']].round(round_digit)
-
             
                     # Add table headers
                     headers = selected_columns_df.columns.tolist()
