@@ -497,7 +497,7 @@ with col2:
                             'alert': 'Alert'
                         }))
                     
-                    selected_columns_df[['ET0', 'ETa', 'week_irrigation_volume']] = selected_columns_df[['ET0', 'ETa', 'week_irrigation_volume']].round(round_digit)
+                    # selected_columns_df[['ET0', 'ETa', 'week_irrigation_volume']] = selected_columns_df[['ET0', 'ETa', 'week_irrigation_volume']].round(round_digit)
 
             
                     # Add table headers
