@@ -495,9 +495,11 @@ with col2:
                             'week_irrigation_volume': f'Irrigation Volume ({unit_label})',
                             # 'week_irrigation_hours': f'Irrigation time (hours)',
                             'alert': 'Alert'
-                        })
-                        .round(1))
+                        }))
+                    
+                    selected_columns_df[['ET0', 'ETa', 'week_irrigation_volume']] = selected_columns_df[['ET0', 'ETa', 'week_irrigation_volume']].round(round_digit)
 
+            
                     # Add table headers
                     headers = selected_columns_df.columns.tolist()
 
