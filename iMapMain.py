@@ -164,6 +164,8 @@ def display_map():
         control=True
     ).add_to(m)
 
+    m.add_child(folium.LatLngPopup())
+
     Geocoder(collapsed=False, add_marker=False).add_to(m)
 
     return st_folium(m, height=600, width=900, use_container_width=True)
