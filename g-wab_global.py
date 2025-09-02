@@ -29,7 +29,7 @@ def initialize_ee():
     # Initialize Earth Engine
     ee.Initialize(credentials)
 
-initialize_ee()
+# initialize_ee()
 
 # ee.Initialize(project="ee-orsperling")
 # ee.Authenticate()
@@ -181,12 +181,12 @@ def calc_irrigation(pNDVI, rain, et0, m_winter, irrigation_months, irrigation_fa
     return df
 
 
-st.markdown("<h1 style='text-align: center;'>AWaB - Almond Water Budget</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center;'>G-WaB: Geographic Water Budget</h1>", unsafe_allow_html=True)
 st.markdown(
-    "<p style='text-align: center; font-size: 20px'>This is a research report founded by <a href=\"https://www.bard-isus.org/\"> <strong>BARD</strong></a>. </p>",
+    "<p style='text-align: center; font-size: 20px'>A <a href=\"https://www.bard-isus.org/\"> <strong>BARD</strong></a> research report by: </p>",
     unsafe_allow_html=True)
 st.markdown(
-    "<p style='text-align: center;'>For further information contact: <a href=\"mailto:orsp@volcani.agri.gov.il\"> <strong>Or Sperling</strong></a> (ARO-Volcani), <a href=\"mailto:mzwienie@ucdavis.edu\"> <strong>Maciej Zwieniecki</strong></a> (UC Davis), <a href=\"mailto:zellis@ucdavis.edu\"> <strong>Zac Ellis</strong></a> (UC Davis), <a href=\"mailto:niccolo.tricerri@unito.it\"> <strong>Niccolò Tricerri</strong></a> (UNITO - IUSS Pavia)  </p>",
+    "<p style='text-align: center;'><a href=\"mailto:orsp@volcani.agri.gov.il\"> <strong>Or Sperling</strong></a> (ARO-Volcani), <a href=\"mailto:mzwienie@ucdavis.edu\"> <strong>Maciej Zwieniecki</strong></a> (UC Davis), <a href=\"mailto:zellis@ucdavis.edu\"> <strong>Zac Ellis</strong></a> (UC Davis), and <a href=\"mailto:niccolo.tricerri@unito.it\"> <strong>Niccolò Tricerri</strong></a> (UNITO - IUSS Pavia)  </p>",
     unsafe_allow_html=True)
 
 
