@@ -29,7 +29,7 @@ def initialize_ee():
     # Initialize Earth Engine
     ee.Initialize(credentials)
 
-# initialize_ee()
+initialize_ee()
 
 # ee.Initialize(project="ee-orsperling")
 # ee.Authenticate()
