@@ -19,7 +19,6 @@ import openmeteo_requests
 
 st.set_page_config(layout='wide')
 
-
 # Function to initialize Earth Engine with credentials
 def initialize_ee():
     # Get credentials from Streamlit secrets
@@ -30,12 +29,9 @@ def initialize_ee():
     # Initialize Earth Engine
     ee.Initialize(credentials)
 
-
 initialize_ee()
 
-#ee.Initialize(project="ee-orsperling")
-
-
+# ee.Initi11-alize(project="ee-orsperling")
 # ee.Authenticate()
 
 
@@ -115,13 +111,13 @@ def get_et0(lat, lon):
 
     # Build dataframe
 
-    daily = response.Daily()
-
+    daily=response.Daily()
+    
     time = pd.date_range(
-        start=pd.to_datetime(daily.Time(), unit="s", utc=True),
-        end=pd.to_datetime(daily.TimeEnd(), unit="s", utc=True),
-        freq=pd.Timedelta(seconds=daily.Interval()),
-        inclusive="left"
+        start = pd.to_datetime(daily.Time(), unit = "s", utc = True),
+        end = pd.to_datetime(daily.TimeEnd(), unit = "s", utc = True),
+        freq = pd.Timedelta(seconds = daily.Interval()),
+        inclusive = "left"
     )
 
     et0 = response.Daily().Variables(0).ValuesAsNumpy()
@@ -131,13 +127,13 @@ def get_et0(lat, lon):
 
     df["year"] = df["time"].dt.year
     df["month"] = df["time"].dt.month
-
+    
     # Step 1: sum ET₀ per (year, month)
     monthly_sums = df.groupby(["year", "month"])["et0"].sum().reset_index()
 
     # Step 2: average monthly sums across years
     avg_monthly_et0 = monthly_sums.groupby("month")["et0"].mean().reset_index()
-    avg_monthly_et0["et0"] = avg_monthly_et0["et0"] * 1.1
+    avg_monthly_et0["et0"] = avg_monthly_et0["et0"]
 
     avg_monthly_et0.rename(columns={"et0": "ET0"}, inplace=True)
 
@@ -150,8 +146,8 @@ def get_et0(lat, lon):
 # 🌍 Interactive Map for Coordinate Selection
 def display_map():
     # Center and zoom
-    map_center = [32.76558726677407, 35.75073837793036]
-    zoom = 14
+    map_center = [31.709172, 34.800522]
+    zoom = 15
 
     # Create map
     m = folium.Map(location=map_center, zoom_start=zoom, tiles=None)
@@ -172,21 +168,18 @@ def display_map():
 
 
 # 📊 Function to Calculate Irrigation
-def calc_irrigation(ndvi, rain, et0, m_winter, irrigation_months, irrigation_factor):
+def calc_irrigation(pNDVI, rain, et0, m_winter, irrigation_months, irrigation_factor):
     df = et0.copy()
 
-    NDVI = ndvi
-    rain1 = rain * conversion_factor + m_winter
-
-    if NDVI < 0.65: NDVI *= 1.1
+    rain1 = (rain + m_winter) * conversion_factor
 
     mnts = list(range(irrigation_months[0], irrigation_months[1] + 1))
 
     df.loc[~df['month'].isin(range(3, 11)), 'ET0'] = 0  # Zero ET0 for non-growing months
-    df['ET0'] *= conversion_factor * 0.8  # Convert ET0 to inches with 90% efficiency
+    df['ET0'] *= conversion_factor  # Convert ET0 to inches with 90% efficiency
 
     # Adjust ETa based on NDVI
-    df['ETa'] = df['ET0'] * NDVI / 0.7
+    df['ETa'] = df['ET0'] * pNDVI / 0.7
 
     # # Soil water balance
     SWI = (rain1 - df.loc[~df['month'].isin(mnts), 'ETa'].sum() - 50 * conversion_factor) / len(mnts)
@@ -258,7 +251,6 @@ unit_system = st.sidebar.radio("Select Units", ["Metric (mm)", "Imperial (inches
 
 unit_label = "inches" if "Imperial" in unit_system else "mm"
 conversion_factor = 0.03937 if "Imperial" in unit_system else 1
-round_digit = 1 if "Imperial" in unit_system else 0
 
 # Layout: 2 columns (map | output)
 col2, col1 = st.columns([6, 4])
@@ -284,13 +276,9 @@ with col2:
     m_winter = st.sidebar.slider(f"Winter Irrigation ({unit_label})", 0, int(round(700 * conversion_factor)), 0,
                                  step=int(round(20 * conversion_factor)),
                                  help="Did you irrigate in winter? If yes, how much?")
-
-    irrigation_months = st.sidebar.slider("Irrigation Months", 1, 12, (datetime.now().month + 1, 10), step=1,
+                                 
+    irrigation_months = st.sidebar.slider("Irrigation Months", 1, 12, (3, 10), step=1,
                                           help="During which months will you irrigate?")
-
-    # irrigation_rate = st.sidebar.slider(f'Irrigation Rate ({unit_label}/hour)', float(.3 * conversion_factor),
-    #                                     float(2.8 * conversion_factor), float(1 * conversion_factor),
-    #                                     float(.1 * conversion_factor), help="What is your hourly flow rate?")
 
     # --- Handle map click
     if map_data and isinstance(map_data, dict) and "last_clicked" in map_data:
@@ -325,6 +313,9 @@ with col2:
             ndvi = st.session_state.get("ndvi")
             et0 = st.session_state.get("et0")
 
+            IF = 0.33 / (1 + np.exp(20 * (ndvi - 0.6))) + 1
+            pNDVI = ndvi * IF
+
             if rain is not None and ndvi is not None and et0 is not None:
                 total_rain = rain * conversion_factor
                 m_rain = st.sidebar.slider(f"Fix Rain to Field ({unit_label})", 0, int(round(1000 * conversion_factor)),
@@ -332,7 +323,7 @@ with col2:
                                            help="Do you know a better value? Do you think less water was retained in the soil?")
 
                 # 🔄 Always recalculate irrigation when sliders or location change
-                df_irrigation = calc_irrigation(ndvi, m_rain / conversion_factor, et0, m_winter, irrigation_months, 1)
+                df_irrigation = calc_irrigation(pNDVI, m_rain , et0, m_winter, irrigation_months, 1)
 
                 total_irrigation = df_irrigation['irrigation'].sum()
                 m_irrigation = st.sidebar.slider(f"Water Allocation ({unit_label})", 0,
@@ -343,46 +334,12 @@ with col2:
                 irrigation_factor = m_irrigation / total_irrigation
 
                 # ✅ Adjust ET0 in the table
-                df_irrigation = calc_irrigation(ndvi, m_rain / conversion_factor, et0, m_winter, irrigation_months,
-                                                irrigation_factor)
+                df_irrigation = calc_irrigation(pNDVI, m_rain, et0, m_winter, irrigation_months, irrigation_factor)
                 total_irrigation = df_irrigation['irrigation'].sum()
 
-                st.markdown("""
-                <style>
-                .centered-stats {
-                    text-align: center;
-                    font-size: 27px;
-                    font-weight: bold;
-                    margin-top: 15px;
-                }
 
-                .tooltip-icon {
-                  display: inline-block;
-                  width: 17px;
-                  height: 17px;
-                  background-color: #74ac72;
-                  color: white;
-                  border-radius: 50%;
-                  text-align: center;
-                  font-size: 12px;
-                  line-height: 16px;
-                  margin-left: 3px;
-                  cursor: help;
-                  vertical-align: middle;
-                }
-                .tooltip-icon::after {
-                  content: "i";
-                }
-                </style>
-                """, unsafe_allow_html=True)
-
-                st.markdown(f"""
-                <div class="centered-stats">
-                  <span title="Potential Normalized Difference Vegetation Index — shows vegetation health."> <span class="tooltip-icon"></span> NDVI</span>: {ndvi:.2f} | 
-                  <span title="Potential Total Evapotranspiration for the season"> <span class="tooltip-icon"></span> ET₀</span>: {df_irrigation['ET0'].sum():.0f} {unit_label} | 
-                  <span title="Total amount of water suggested for the season."> <span class="tooltip-icon"></span> Irrigation</span>: {total_irrigation:.0f} {unit_label}
-                </div>
-                """, unsafe_allow_html=True)
+                st.markdown(f"<p style='text-align: center; font-size: 30px;'>Rain: {rain * conversion_factor:.2f} {unit_label} | ET₀: {df_irrigation['ET0'].sum():.0f} {unit_label}</p>", unsafe_allow_html=True)
+                st.markdown(f"<p style='text-align: center; font-size: 30px;'>NDVI: {ndvi:.2f} | pNDVI: {pNDVI:.2f}| Irrigation: {total_irrigation:.0f} {unit_label}</p>", unsafe_allow_html=True)
 
                 # 📈 Plot
                 st.subheader('Monthly Illustration:')
@@ -421,25 +378,27 @@ with col2:
 
                 # 📊 Table
                 st.subheader('Weekly Recommendations:')
-
+                
                 # Filter by selected irrigation months
                 start_month, end_month = irrigation_months
                 filtered_df = df_irrigation[df_irrigation['month'].between(start_month, end_month)]
 
+
                 filtered_df['month'] = pd.to_datetime(filtered_df['month'], format='%m').dt.month_name()
-                filtered_df[['ET0', 'ETa', 'week_irrigation_volume']] = filtered_df[['ET0', 'ETa', 'irrigation']] / 4
-                filtered_df[['ET0', 'ETa', 'week_irrigation_volume']] = filtered_df[['ET0', 'ETa', 'week_irrigation_volume']].round(round_digit)
+                filtered_df[['ET0', 'ETa', 'week_irrigation']] = filtered_df[['ET0', 'ETa', 'irrigation']] / 4
 
-
-                # round ET0 ETa and week_irrigation_volume to 1 decimal place
-                
+                # round ET0 and irrigation to the nearest 5 if units are mm
+                if "Imperial" in unit_system:
+                    filtered_df[['ET0', 'week_irrigation']] = filtered_df[['ET0', 'week_irrigation']].round(1)
+                else:
+                    filtered_df[['ET0', 'week_irrigation']] = (filtered_df[['ET0', 'week_irrigation']]/5).round()*5
 
                 st.dataframe(
-                    filtered_df[['month', 'ET0', 'ETa', 'week_irrigation_volume', 'alert']]
+                    filtered_df[['month', 'ET0', 'week_irrigation', 'alert']]
                     .rename(columns={
                         'month': 'Month',
                         'ET0': f'ET₀ ({unit_label})',
-                        'ETa': f'ETa ({unit_label})',
+                        'ETa': f'ETa ({ unit_label})',
                         'week_irrigation_volume': f'Irrigation Volume ({unit_label})',
                         # 'week_irrigation_hours': f'Irrigation time (hours)',
                         'alert': 'Alert'
@@ -484,9 +443,9 @@ with col2:
                     start_month, end_month = irrigation_months
                     filtered_df = df_irrigation[df_irrigation['month'].between(start_month, end_month)]
 
+                    
                     filtered_df['month'] = pd.to_datetime(filtered_df['month'], format='%m').dt.month_name()
                     filtered_df[['ET0', 'ETa', 'week_irrigation_volume']] = filtered_df[['ET0', 'ETa', 'irrigation']] / 4
-                    filtered_df[['ET0', 'ETa', 'week_irrigation_volume']] = filtered_df[['ET0', 'ETa', 'week_irrigation_volume']].round(round_digit)
 
                     selected_columns_df = (
                         filtered_df[['month', 'ET0', 'ETa', 'week_irrigation_volume', 'alert']]
@@ -497,9 +456,9 @@ with col2:
                             'week_irrigation_volume': f'Irrigation Volume ({unit_label})',
                             # 'week_irrigation_hours': f'Irrigation time (hours)',
                             'alert': 'Alert'
-                        }))
-                    
-            
+                        })
+                        .round(1))
+
                     # Add table headers
                     headers = selected_columns_df.columns.tolist()
 
